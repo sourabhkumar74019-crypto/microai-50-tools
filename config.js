@@ -1,10 +1,18 @@
-// ==========================================
-// NEXUSAI PRO - CONFIGURATION & API KEYS
-// ==========================================
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const CONFIG = {
-  GEMINI_API_KEY: "AQ.Ab8RN6J2M6W9aC5fLwGwG8d1RpF2XWCNLqIOBxvFPSdshysBjg",
-  PROJECT_NUMBER: "379512609259",
-  APP_NAME: "NexusAI Pro 50-in-1",
-  AI_MODEL: "gemini-3.5-flash"
-};
+// Vercel / Environment variable se API Key read karna
+const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+if (!apiKey) {
+  console.error("⚠️ GEMINI_API_KEY missing in environment variables!");
+}
+
+// Google Generative AI Instance Initialize karna
+const genAI = new GoogleGenerativeAI(apiKey || "");
+
+// Standard Model Configuration (Gemini 1.5 Pro / Flash)
+export const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash", // Fast and efficient for micro-SaaS tools
+});
+
+export default genAI;
