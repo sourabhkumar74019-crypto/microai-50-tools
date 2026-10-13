@@ -16,3 +16,4 @@ export const model = genAI.getGenerativeModel({
 });
 
 export default genAI;
+export const GEMINI_API_KEY = "AQ.Ab8RN6JPKFDhdDb_bvpMZNXDRA0E8brJjgtBrWLzG-f3HUSMeQ";
