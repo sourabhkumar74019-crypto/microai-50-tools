@@ -244,7 +244,6 @@
   </footer>
 
   <!-- SCRIPTS -->
-  <script src="config.js"></script>
   <script src="tools.js"></script>
   <script>
     let activeTool = null;
@@ -379,43 +378,24 @@
       btn.disabled = true;
       btn.innerText = "🧠 Generating AI Result...";
 
-      const apiKey = window.CONFIG ? window.CONFIG.GROQ_API_KEY : "";
-      const model = window.CONFIG ? window.CONFIG.AI_MODEL : "llama-3.3-70b-versatile";
-
-      if (!apiKey) {
-        outputResult.innerText = "Error: Groq API Key not found in config.js!";
-        outputContainer.classList.remove('hidden');
-        btn.innerText = "Generate AI Result ✨";
-        btn.disabled = false;
-        return;
-      }
-
       try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const res = await fetch('/api/groq', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: model,
-            messages: [
-              {
-                role: "user",
-                content: `Task: ${activeTool ? activeTool.name : 'AI Tool'}\nUser Request: ${prompt}\n\nProvide a detailed, professional output in clean text.`
-              }
-            ]
+            toolId: activeTool ? activeTool.id : 'general',
+            input: `Task: ${activeTool ? activeTool.name : 'AI Tool'}\nUser Request: ${prompt}\n\nProvide a detailed, professional output in clean text.`
           })
         });
 
         const data = await res.json();
         
-        if (data.choices && data.choices[0]?.message?.content) {
-          outputResult.innerText = data.choices[0].message.content;
-        } else if (data.error) {
-          outputResult.innerText = "API Error: " + data.error.message;
+        if (res.ok && data.result) {
+          outputResult.innerText = data.result;
         } else {
-          outputResult.innerText = "Error: Invalid response structure from Groq API.";
+          outputResult.innerText = "Error: " + (data.error || 'Failed to generate result');
         }
       } catch (e) {
         outputResult.innerText = "Network Error! Please check your internet connection.";
