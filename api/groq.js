@@ -1,9 +1,13 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { prompt } = req.body;
+  const { toolId, input } = req.body;
+
+  if (!process.env.GROQ_API_KEY) {
+    return res.status(500).json({ error: 'GROQ_API_KEY is missing in Vercel Environment Variables.' });
+  }
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -13,14 +17,31 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'mixtral-8x7b-32768',
-        messages: [{ role: 'user', content: prompt }]
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert AI assistant specializing in ${toolId || 'content generation'}. Provide clear, high-quality output.`
+          },
+          {
+            role: 'user',
+            content: input
+          }
+        ]
       })
     });
 
     const data = await response.json();
-    return res.status(200).json(data);
-  } catch (error) {
-    return res.status(500).json({ error: 'Failed to fetch AI response' });
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: data.error?.message || 'Groq API error' });
+    }
+
+    const aiOutput = data.choices[0]?.message?.content || 'No output generated.';
+    return res.status(200).json({ result: aiOutput });
+
+  } catch (err) {
+    console.error('Server error:', err);
+    return res.status(500).json({ error: 'Internal Server Error: ' + err.message });
   }
 }
